@@ -45,13 +45,53 @@ namespace ShiftRegisterSample
         // Output Enable (OE): when set low, each of the eight shift register outputs (Q0,Q1,...Q7) are set high/low depending on the binary value in the storage register
         private const int OE_PIN = 6; // GPIO pin 6 is pin 31 oin the RPI2 header
         private GpioPin outputEnable;
-        
-         
 
-        /// </summary>
+        // Storage Register Clock (SRCLK): the clock for clocking the current 8 bits of data from teh serial input register to the storage register
+        private const int SRCLR_PIN = 12; //GPIO 12 is pin 32 on RPi2 header
+        private GpioPin shiftRegisterClear;
+
+        private DispatcherTimer timer;
+        private byte pinMask = 0x01;
+        private bool areLedsInverted = true;
+
+        private SolidColorBrush redBrush = new SolidColorBrush(Windows.UI.Colors.Red);
+        private SolidColorBrush grayBrush = new SolidColorBrush(Windows.UI.Colors.LightGray);
+
         public MainPage()
         {
             this.InitializeComponent();
+
+            //register for the unloaded event so we can clean up upon exit
+            Unloaded += MainPage_Unloaded;
+
+            InitializeSystem();
+
         }
+
+        private void InitializeSystem()
+        {
+            //Initialize the GPIO pins we will use for the bit-banging our serial data to the shift register
+            var gpio = GpioController.GetDefault();
+
+            //show an error if there is no GPIO controller
+            if (gpio == null)
+            {
+                GpioStatus.Text = "There is no GPIO controller on this device.";
+                return;
+            }
+
+            //setup the RPi2 GPIO that controls the shift register
+            shiftRegisterClock = gpio.OpenPin(SRCLK_PIN);
+            serial = gpio.OpenPin(SER_PIN);
+            registerClock = gpio.OpenPin(RCLK_PIN);
+            outputEnable = gpio.OpenPin(SRCLR_PIN);
+
+            //show an error if the pin wasn;t initialized properly
+
+
+        }
+
+        /// </summary>
+        
     }
 }
